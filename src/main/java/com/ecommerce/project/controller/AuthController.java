@@ -12,6 +12,10 @@ import com.ecommerce.project.security.response.MessageResponse;
 import com.ecommerce.project.security.response.UserInfoResponse;
 import com.ecommerce.project.security.services.UserDetailsImpl;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -28,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Tag(name = "Authentication Controller", description = "User authentication and authorization endpoints")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -47,6 +52,11 @@ public class AuthController {
     @Autowired
     PasswordEncoder encoder;
 
+    @Operation(summary = "User login", description = "Authenticates a user and returns a JWT token")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User authenticated successfully"),
+            @ApiResponse(responseCode = "404", description = "Invalid credentials")
+    })
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
         Authentication authentication;
@@ -77,7 +87,11 @@ public class AuthController {
                 jwtCookie.toString())
                 .body(response);
     }
-
+    @Operation(summary = "User registration", description = "Registers a new user with given roles")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User registered successfully"),
+            @ApiResponse(responseCode = "400", description = "Username or email already taken")
+    })
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
         if (userRepository.existsByUserName(signUpRequest.getUsername())) {
