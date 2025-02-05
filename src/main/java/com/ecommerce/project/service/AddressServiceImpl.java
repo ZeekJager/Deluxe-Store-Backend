@@ -22,13 +22,7 @@ public class AddressServiceImpl implements AddressService{
 
     @Autowired
     UserRepository userRepository;
-    /**
-     * Create a new address for a user
-     *
-     * @param addressDTO The address data to be created
-     * @param user       The user associated with the address
-     * @return The created AddressDTO object
-     */
+
     @Override
     public AddressDTO createAddress(AddressDTO addressDTO, User user) {
         Address address = modelMapper.map(addressDTO, Address.class);
@@ -39,11 +33,7 @@ public class AddressServiceImpl implements AddressService{
         Address savedAddress = addressRepository.save(address);
         return modelMapper.map(savedAddress, AddressDTO.class);
     }
-    /**
-     * Retrieve a list of all addresses
-     *
-     * @return A list of AddressDTO objects
-     */
+
     @Override
     public List<AddressDTO> getAddresses() {
         List<Address> addresses = addressRepository.findAll();
@@ -51,13 +41,7 @@ public class AddressServiceImpl implements AddressService{
                 .map(address -> modelMapper.map(address, AddressDTO.class))
                 .toList();
     }
-    /**
-     * Get address by ID
-     *
-     * @param addressId The ID of the address to retrieve
-     * @return AddressDTO object for the specified address
-     * @throws ResourceNotFoundException If the address with the given ID does not exist
-     */
+
     @Override
     public AddressDTO getAddressesById(Long addressId) {
         Address address = addressRepository.findById(addressId)
@@ -65,12 +49,6 @@ public class AddressServiceImpl implements AddressService{
         return modelMapper.map(address, AddressDTO.class);
     }
 
-    /**
-     * Retrieve all addresses for a specific user
-     *
-     * @param user The user whose addresses are to be fetched
-     * @return A list of AddressDTO objects for the user
-     */
     @Override
     public List<AddressDTO> getUserAddresses(User user) {
         List<Address> addresses = user.getAddresses();
@@ -79,14 +57,6 @@ public class AddressServiceImpl implements AddressService{
                 .toList();
     }
 
-    /**
-     * Update an existing address
-     *
-     * @param addressId The ID of the address to update
-     * @param addressDTO The new address data
-     * @return The updated AddressDTO object
-     * @throws ResourceNotFoundException If the address with the given ID does not exist
-     */
     @Override
     public AddressDTO updateAddress(Long addressId, AddressDTO addressDTO) {
         Address addressFromDatabase = addressRepository.findById(addressId)
@@ -108,13 +78,7 @@ public class AddressServiceImpl implements AddressService{
 
         return modelMapper.map(updatedAddress, AddressDTO.class);
     }
-    /**
-     * Delete an address by its ID
-     *
-     * @param addressId The ID of the address to delete
-     * @return A message indicating the deletion status
-     * @throws ResourceNotFoundException If the address with the given ID does not exist
-     */
+
     @Override
     public String deleteAddress(Long addressId) {
         Address addressFromDatabase = addressRepository.findById(addressId)

@@ -42,20 +42,6 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     ProductRepository productRepository;
 
-    /**
-     * Place a new order based on the user's cart, address, and payment information.
-     *
-     * @param emailId           The email ID of the user placing the order
-     * @param addressId         The ID of the delivery address for the order
-     * @param paymentMethod     The method of payment for the order (e.g., credit card, PayPal)
-     * @param pgName            The name of the payment gateway used for the transaction
-     * @param pgPaymentId       The payment ID provided by the payment gateway
-     * @param pgStatus          The status of the payment (e.g., success, failed)
-     * @param pgResponseMessage A message from the payment gateway regarding the transaction
-     * @return An OrderDTO containing details about the placed order
-     * @throws ResourceNotFoundException If the cart or address does not exist
-     * @throws APIException              If the cart is empty
-     */
     @Override
     @Transactional
     public OrderDTO placeOrder(String emailId, Long addressId, String paymentMethod, String pgName, String pgPaymentId, String pgStatus, String pgResponseMessage) {
@@ -120,49 +106,4 @@ public class OrderServiceImpl implements OrderService {
 
         return orderDTO;
     }
-    @Override
-    public List<OrderDTO> getAllOrders() {
-        List<Order> orders = orderRepository.findAll();
-        List<OrderDTO> orderDTOs = new ArrayList<>();
-
-        for (Order order : orders) {
-            OrderDTO orderDTO = modelMapper.map(order, OrderDTO.class);
-            List<OrderItemDTO> orderItemDTOs = new ArrayList<>();
-
-            for (OrderItem item : order.getOrderItems()) {
-                orderItemDTOs.add(modelMapper.map(item, OrderItemDTO.class));
-            }
-
-            orderDTO.setOrderItems(orderItemDTOs);
-            orderDTOs.add(orderDTO);
-        }
-
-        return orderDTOs;
-    }
-    @Override
-    public List<OrderDTO> getOrdersByUser(String emailId) {
-        List<Order> orders = orderRepository.findByEmail(emailId);
-
-        if (orders.isEmpty()) {
-            throw new ResourceNotFoundException("Order", "email", emailId);
-        }
-
-        List<OrderDTO> orderDTOs = new ArrayList<>();
-
-        for (Order order : orders) {
-            OrderDTO orderDTO = modelMapper.map(order, OrderDTO.class);
-            List<OrderItemDTO> orderItemDTOs = new ArrayList<>();
-
-            for (OrderItem item : order.getOrderItems()) {
-                orderItemDTOs.add(modelMapper.map(item, OrderItemDTO.class));
-            }
-
-            orderDTO.setOrderItems(orderItemDTOs);
-            orderDTOs.add(orderDTO);
-        }
-
-        return orderDTOs;
-    }
-
-
 }

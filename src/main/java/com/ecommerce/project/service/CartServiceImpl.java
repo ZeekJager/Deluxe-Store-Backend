@@ -36,15 +36,7 @@ public class CartServiceImpl implements CartService{
 
     @Autowired
     ModelMapper modelMapper;
-    /**
-     * Add a product to the cart
-     *
-     * @param productId The ID of the product to be added
-     * @param quantity  The quantity of the product to be added
-     * @return The updated cart details
-     * @throws APIException If the product is already in the cart, unavailable, or the requested quantity is invalid
-     * @throws ResourceNotFoundException If the product with the given ID is not found
-     */
+
     @Override
     public CartDTO addProductToCart(Long productId, Integer quantity) {
         Cart cart  = createCart();
@@ -94,15 +86,10 @@ public class CartServiceImpl implements CartService{
         });
 
         cartDTO.setProducts(productStream.toList());
-        System.out.println("cart Dto: " + cartDTO.toString());
+
         return cartDTO;
     }
-    /**
-     * Retrieve all carts
-     *
-     * @return A list of all carts
-     * @throws APIException If no carts are found
-     */
+
     @Override
     public List<CartDTO> getAllCarts() {
         List<Cart> carts = cartRepository.findAll();
@@ -129,14 +116,7 @@ public class CartServiceImpl implements CartService{
 
         return cartDTOs;
     }
-    /**
-     * Retrieve a specific cart by email and cart ID
-     *
-     * @param emailId The email of the user
-     * @param cartId  The ID of the cart to retrieve
-     * @return The cart details
-     * @throws ResourceNotFoundException If the cart is not found for the given email and cart ID
-     */
+
     @Override
     public CartDTO getCart(String emailId, Long cartId) {
         Cart cart = cartRepository.findCartByEmailAndCartId(emailId, cartId);
@@ -152,15 +132,7 @@ public class CartServiceImpl implements CartService{
         cartDTO.setProducts(products);
         return cartDTO;
     }
-    /**
-     * Update the quantity of a product in the cart
-     *
-     * @param productId The ID of the product to update
-     * @param quantity  The quantity to update the product to
-     * @return The updated cart details
-     * @throws APIException If the quantity is invalid or product is not available in the cart
-     * @throws ResourceNotFoundException If the product or cart is not found
-     */
+
     @Transactional
     @Override
     public CartDTO updateProductQuantityInCart(Long productId, Integer quantity) {
@@ -245,14 +217,7 @@ public class CartServiceImpl implements CartService{
         return newCart;
     }
 
-    /**
-     * Delete a product from the cart
-     *
-     * @param cartId    The ID of the cart to delete product from
-     * @param productId The ID of the product to delete
-     * @return A message indicating the deletion status
-     * @throws ResourceNotFoundException If the product or cart is not found
-     */
+
     @Transactional
     @Override
     public String deleteProductFromCart(Long cartId, Long productId) {
@@ -273,14 +238,7 @@ public class CartServiceImpl implements CartService{
         return "Product " + cartItem.getProduct().getProductName() + " removed from the cart !!!";
     }
 
-    /**
-     * Update product details in all relevant carts
-     *
-     * @param cartId    The ID of the cart to update
-     * @param productId The ID of the product to update
-     * @throws ResourceNotFoundException If the product or cart is not found
-     * @throws APIException If updating the product fails
-     */
+
     @Override
     public void updateProductInCarts(Long cartId, Long productId) {
         Cart cart = cartRepository.findById(cartId)

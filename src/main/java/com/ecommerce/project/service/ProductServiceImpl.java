@@ -51,17 +51,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Value("${image.base.url}")
     private String imageBaseUrl;
-    /**
-     * Adds a new product to a specific category.
-     *
-     * @param categoryId The ID of the category to which the product is to be added
-     * @param productDTO The product details
-     * @return The added product details as a ProductDTO
-     * @throws ResourceNotFoundException If the category with the given ID does not exist
-     * @throws APIException              If the product already exists in the category
-     */
+
     @Override
-    public ProductDTO addProduct(Long categoryId, ProductDTO productDTO) {
+    public ProductDTO addProduct(Long categoryId, ProductDTO productDTO, MultipartFile image) throws IOException {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Category", "categoryId", categoryId));
@@ -78,7 +70,11 @@ public class ProductServiceImpl implements ProductService {
 
         if (isProductNotPresent) {
             Product product = modelMapper.map(productDTO, Product.class);
-            product.setImage("default.png");
+            String fileName = null;
+                fileName = fileService.uploadImage(path, image);
+
+            product.setImage(fileName);
+
             product.setCategory(category);
             double specialPrice = product.getPrice() -
                     ((product.getDiscount() * 0.01) * product.getPrice());
@@ -90,18 +86,58 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    /**
-     * Retrieves a paginated and sorted list of all products, optionally filtered by keyword and category.
-     *
-     * @param pageNumber The page number to retrieve
-     * @param pageSize The number of products per page
-     * @param sortBy The field by which to sort the results
-     * @param sortOrder The order of sorting, either "asc" or "desc"
-     * @param keyword A keyword to search for in product names
-     * @param category The category to filter products by
-     * @return A ProductResponse containing the paginated list of products
-     * @throws APIException If no products are found matching the criteria
-     */
+    @Override
+    public ProductDTO updateProduct(Long productId, ProductDTO productDTO, MultipartFile image) throws IOException {
+        Product productFromDb = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+        if (image != null) {
+            String fileName = fileService.uploadImage(path, image);
+
+            productFromDb.setImage(fileName);
+        }
+        Product product = modelMapper.map(productDTO, Product.class);
+
+        if (product.getProductName() != null) {
+            productFromDb.setProductName(product.getProductName());
+        }
+        if (product.getDescription() != null) {
+            productFromDb.setDescription(product.getDescription());
+        }
+        if (product.getQuantity() != null) {
+            productFromDb.setQuantity(product.getQuantity());
+        }
+        if (product.getDiscount() != 0) {
+            productFromDb.setDiscount(product.getDiscount());
+        }
+        if (product.getPrice() != 0) {
+            productFromDb.setPrice(product.getPrice());
+        }
+        double specialPrice = product.getPrice() -
+                ((product.getDiscount() * 0.01) * product.getPrice());
+        productFromDb.setSpecialPrice(specialPrice);
+
+
+        Product savedProduct = productRepository.save(productFromDb);
+
+        List<Cart> carts = cartRepository.findCartsByProductId(productId);
+
+        List<CartDTO> cartDTOs = carts.stream().map(cart -> {
+            CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
+
+            List<ProductDTO> products = cart.getCartItems().stream()
+                    .map(p -> modelMapper.map(p.getProduct(), ProductDTO.class)).collect(Collectors.toList());
+
+            cartDTO.setProducts(products);
+
+            return cartDTO;
+
+        }).collect(Collectors.toList());
+
+        cartDTOs.forEach(cart -> cartService.updateProductInCarts(cart.getCartId(), productId));
+
+        return modelMapper.map(savedProduct, ProductDTO.class);
+    }
+
     @Override
     public ProductResponse getAllProducts(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder, String keyword, String category) {
         Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc")
@@ -127,7 +163,7 @@ public class ProductServiceImpl implements ProductService {
         List<ProductDTO> productDTOS = products.stream()
                 .map(product -> {
                     ProductDTO productDTO = modelMapper.map(product, ProductDTO.class);
-                    productDTO.setImage(product.getImage());
+                    productDTO.setImage(constructImageUrl(product.getImage()));
                     return productDTO;
                 })
                 .toList();
@@ -145,18 +181,7 @@ public class ProductServiceImpl implements ProductService {
     private String constructImageUrl(String imageName) {
         return imageBaseUrl.endsWith("/") ? imageBaseUrl + imageName : imageBaseUrl + "/" + imageName;
     }
-    /**
-     * Searches for products in a specific category.
-     *
-     * @param categoryId The ID of the category to filter products by
-     * @param pageNumber The page number to retrieve
-     * @param pageSize The number of products per page
-     * @param sortBy The field by which to sort the results
-     * @param sortOrder The order of sorting, either "asc" or "desc"
-     * @return A ProductResponse containing the paginated list of products in the category
-     * @throws ResourceNotFoundException If the category with the given ID does not exist
-     * @throws APIException              If the category does not have any products
-     */
+
     @Override
     public ProductResponse searchByCategory(Long categoryId, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         Category category = categoryRepository.findById(categoryId)
@@ -189,17 +214,7 @@ public class ProductServiceImpl implements ProductService {
         productResponse.setLastPage(pageProducts.isLast());
         return productResponse;
     }
-    /**
-     * Searches for products by a keyword.
-     *
-     * @param keyword The keyword to search for in product names
-     * @param pageNumber The page number to retrieve
-     * @param pageSize The number of products per page
-     * @param sortBy The field by which to sort the results
-     * @param sortOrder The order of sorting, either "asc" or "desc"
-     * @return A ProductResponse containing the paginated list of products matching the keyword
-     * @throws APIException If no products are found matching the keyword
-     */
+
     @Override
     public ProductResponse searchProductByKeyword(String keyword, Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc")
@@ -228,55 +243,7 @@ public class ProductServiceImpl implements ProductService {
         return productResponse;
     }
 
-    /**
-     * Updates the details of an existing product.
-     *
-     * @param productId The ID of the product to update
-     * @param productDTO The new product details
-     * @return The updated product details as a ProductDTO
-     * @throws ResourceNotFoundException If the product with the given ID does not exist
-     */
-    @Override
-    public ProductDTO updateProduct(Long productId, ProductDTO productDTO) {
-        Product productFromDb = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
 
-        Product product = modelMapper.map(productDTO, Product.class);
-
-        productFromDb.setProductName(product.getProductName());
-        productFromDb.setDescription(product.getDescription());
-        productFromDb.setQuantity(product.getQuantity());
-        productFromDb.setDiscount(product.getDiscount());
-        productFromDb.setPrice(product.getPrice());
-        productFromDb.setSpecialPrice(product.getSpecialPrice());
-
-        Product savedProduct = productRepository.save(productFromDb);
-
-        List<Cart> carts = cartRepository.findCartsByProductId(productId);
-
-        List<CartDTO> cartDTOs = carts.stream().map(cart -> {
-            CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
-
-            List<ProductDTO> products = cart.getCartItems().stream()
-                    .map(p -> modelMapper.map(p.getProduct(), ProductDTO.class)).collect(Collectors.toList());
-
-            cartDTO.setProducts(products);
-
-            return cartDTO;
-
-        }).collect(Collectors.toList());
-
-        cartDTOs.forEach(cart -> cartService.updateProductInCarts(cart.getCartId(), productId));
-
-        return modelMapper.map(savedProduct, ProductDTO.class);
-    }
-    /**
-     * Deletes a product by its ID.
-     *
-     * @param productId The ID of the product to delete
-     * @return The deleted product details as a ProductDTO
-     * @throws ResourceNotFoundException If the product with the given ID does not exist
-     */
     @Override
     public ProductDTO deleteProduct(Long productId) {
         Product product = productRepository.findById(productId)
@@ -290,16 +257,7 @@ public class ProductServiceImpl implements ProductService {
         return modelMapper.map(product, ProductDTO.class);
     }
 
-    /**
-     * Updates the image of an existing product.
-     *
-     * @param productId The ID of the product whose image is to be updated
-     * @param image The new product image
-     * @return The updated product details as a ProductDTO
-     * @throws ResourceNotFoundException If the product with the given ID does not exist
-     * @throws IOException If the image file cannot be processed
-     */
-    @Override
+/*    @Override
     public ProductDTO updateProductImage(Long productId, MultipartFile image) throws IOException {
         Product productFromDb = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
@@ -309,7 +267,7 @@ public class ProductServiceImpl implements ProductService {
 
         Product updatedProduct = productRepository.save(productFromDb);
         return modelMapper.map(updatedProduct, ProductDTO.class);
-    }
+    }*/
 
 
 }
