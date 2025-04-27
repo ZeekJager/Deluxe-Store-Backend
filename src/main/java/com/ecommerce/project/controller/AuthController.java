@@ -11,11 +11,11 @@ import com.ecommerce.project.security.request.SignupRequest;
 import com.ecommerce.project.security.response.MessageResponse;
 import com.ecommerce.project.security.response.UserInfoResponse;
 import com.ecommerce.project.security.services.UserDetailsImpl;
-import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -32,9 +32,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Tag(name = "Authentication Controller", description = "User authentication and authorization endpoints")
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Authentication Controller", description = "User authentication and authorization endpoints")
 public class AuthController {
 
     @Autowired
@@ -51,7 +51,6 @@ public class AuthController {
 
     @Autowired
     PasswordEncoder encoder;
-
     @Operation(summary = "User login", description = "Authenticates a user and returns a JWT token")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User authenticated successfully"),
@@ -84,7 +83,7 @@ public class AuthController {
                 userDetails.getUsername(), roles, jwtCookie.toString());
 
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,
-                jwtCookie.toString())
+                        jwtCookie.toString())
                 .body(response);
     }
     @Operation(summary = "User registration", description = "Registers a new user with given roles")
@@ -142,7 +141,8 @@ public class AuthController {
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
-
+    @Operation(summary = "Get current username", description = "Retrieves the username of the currently authenticated user")
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "Successfully retrieved username"))
     @GetMapping("/username")
     public String currentUserName(Authentication authentication){
         if (authentication != null)
@@ -151,7 +151,8 @@ public class AuthController {
             return "";
     }
 
-
+    @Operation(summary = "Get current user details", description = "Fetches details of the currently authenticated user")
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "Successfully retrieved user details"))
     @GetMapping("/user")
     public ResponseEntity<?> getUserDetails(Authentication authentication){
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
@@ -165,7 +166,8 @@ public class AuthController {
 
         return ResponseEntity.ok().body(response);
     }
-
+    @Operation(summary = "User logout", description = "Logs out the currently authenticated user")
+    @ApiResponses(@ApiResponse(responseCode = "200", description = "User signed out successfully"))
     @PostMapping("/signout")
     public ResponseEntity<?> signoutUser(){
         ResponseCookie cookie = jwtUtils.getCleanJwtCookie();

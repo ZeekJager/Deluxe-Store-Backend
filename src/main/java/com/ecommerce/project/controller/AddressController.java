@@ -13,12 +13,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @Tag(name = "Cart Controller", description = "Manage user addresses")
 @RestController
 @RequestMapping("/api")
-
 public class AddressController {
 
     @Autowired
@@ -26,7 +26,6 @@ public class AddressController {
 
     @Autowired
     AddressService addressService;
-
     @Operation(summary = "Create a new address", description = "Adds an address for the logged-in user")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Address created successfully"),
@@ -46,7 +45,6 @@ public class AddressController {
         List<AddressDTO> addressList = addressService.getAddresses();
         return new ResponseEntity<>(addressList, HttpStatus.OK);
     }
-
     @Operation(summary = "Retrieve an address by ID", description = "Fetches an address using its ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Address found"),
@@ -66,7 +64,6 @@ public class AddressController {
         List<AddressDTO> addressList = addressService.getUserAddresses(user);
         return new ResponseEntity<>(addressList, HttpStatus.OK);
     }
-
     @Operation(summary = "Update an address", description = "Updates an existing address by ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Address updated successfully"),
@@ -78,14 +75,13 @@ public class AddressController {
         AddressDTO updatedAddress = addressService.updateAddress(addressId, addressDTO);
         return new ResponseEntity<>(updatedAddress, HttpStatus.OK);
     }
-
     @Operation(summary = "Delete an address", description = "Deletes an address by ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Address deleted successfully"),
             @ApiResponse(responseCode = "404", description = "Address not found")
     })
     @DeleteMapping("/addresses/{addressId}")
-    public ResponseEntity<String> deleteAddress(@PathVariable Long addressId){
+    public ResponseEntity<String> updateAddress(@PathVariable Long addressId){
         String status = addressService.deleteAddress(addressId);
         return new ResponseEntity<>(status, HttpStatus.OK);
     }

@@ -56,14 +56,14 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     }
 
     private String parseJwt(HttpServletRequest request) {
-/*        String jwt = jwtUtils.getJwtFromCookies(request);
-        logger.debug("AuthTokenFilter.java: {}", jwt);
-        return jwt;*/
+//        String jwt = jwtUtils.getJwtFromCookies(request);
+//        logger.debug("AuthTokenFilter.java: {}", jwt);
+//        return jwt;
         String headerAuth = request.getHeader("Authorization");
         if (headerAuth != null && headerAuth.startsWith("Bearer ")) {
-            return headerAuth.substring(7);
+            return headerAuth.substring(7); // Extracts the token
         }
-        else return null;
+        return null;
     }
 }
 

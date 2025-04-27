@@ -11,9 +11,15 @@ import java.util.UUID;
 
 @Service
 public class FileServiceImpl implements FileService {
-
+    /**
+     * Upload an image file to the specified directory.
+     *
+     * @param path The path where the file will be uploaded
+     * @param file The MultipartFile to be uploaded
+     * @return The name of the uploaded file
+     * @throws IOException If an error occurs during file upload
+     */
     @Override
-
     public String uploadImage(String path, MultipartFile file) throws IOException {
         String originalFileName = file.getOriginalFilename();
         String randomId = UUID.randomUUID().toString();

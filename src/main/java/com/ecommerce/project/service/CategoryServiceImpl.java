@@ -25,6 +25,16 @@ public class CategoryServiceImpl implements CategoryService{
     @Autowired
     private ModelMapper modelMapper;
 
+    /**
+     * Get a paginated list of all categories, optionally sorted by a given field and order.
+     *
+     * @param pageNumber The page number to retrieve (0-based index)
+     * @param pageSize The number of categories per page
+     * @param sortBy The field to sort by (e.g., "categoryName")
+     * @param sortOrder The sorting order, either "asc" for ascending or "desc" for descending
+     * @return A CategoryResponse object containing the paginated list of CategoryDTOs
+     * @throws APIException If no categories are found
+     */
     @Override
     public CategoryResponse getAllCategories(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
         Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc")
@@ -52,6 +62,13 @@ public class CategoryServiceImpl implements CategoryService{
         return categoryResponse;
     }
 
+    /**
+     * Create a new category.
+     *
+     * @param categoryDTO The CategoryDTO object containing category details
+     * @return The created CategoryDTO
+     * @throws APIException If a category with the same name already exists
+     */
     @Override
     public CategoryDTO createCategory(CategoryDTO categoryDTO) {
         Category category = modelMapper.map(categoryDTO, Category.class);
@@ -61,7 +78,13 @@ public class CategoryServiceImpl implements CategoryService{
         Category savedCategory = categoryRepository.save(category);
         return modelMapper.map(savedCategory, CategoryDTO.class);
     }
-
+    /**
+     * Delete an existing category by its ID.
+     *
+     * @param categoryId The ID of the category to delete
+     * @return The deleted CategoryDTO
+     * @throws ResourceNotFoundException If the category with the given ID does not exist
+     */
     @Override
     public CategoryDTO deleteCategory(Long categoryId) {
         Category category = categoryRepository.findById(categoryId)
@@ -70,7 +93,14 @@ public class CategoryServiceImpl implements CategoryService{
         categoryRepository.delete(category);
         return modelMapper.map(category, CategoryDTO.class);
     }
-
+    /**
+     * Update an existing category.
+     *
+     * @param categoryDTO The CategoryDTO object containing updated category details
+     * @param categoryId The ID of the category to update
+     * @return The updated CategoryDTO
+     * @throws ResourceNotFoundException If the category with the given ID does not exist
+     */
     @Override
     public CategoryDTO updateCategory(CategoryDTO categoryDTO, Long categoryId) {
         Category savedCategory = categoryRepository.findById(categoryId)
